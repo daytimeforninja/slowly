@@ -47,10 +47,16 @@
 
         libPath = pkgs.lib.makeLibraryPath buildInputs;
 
-        slowly = craneLib.buildPackage {
-          src = craneLib.cleanCargoSource ./.;
+        src = craneLib.cleanCargoSource ./.;
+
+        cargoArtifacts = craneLib.buildDepsOnly {
+          inherit src buildInputs nativeBuildInputs;
           strictDeps = true;
-          inherit buildInputs nativeBuildInputs;
+        };
+
+        slowly = craneLib.buildPackage {
+          inherit src cargoArtifacts buildInputs nativeBuildInputs;
+          strictDeps = true;
           postFixup = ''
             patchelf --set-rpath "${libPath}" $out/bin/slowly
           '';
