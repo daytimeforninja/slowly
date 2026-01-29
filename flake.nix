@@ -8,9 +8,10 @@
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    crane.url = "github:ipetkov/crane";
   };
 
-  outputs = { self, nixpkgs, flake-utils, rust-overlay }:
+  outputs = { self, nixpkgs, flake-utils, rust-overlay, crane }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         overlays = [ (import rust-overlay) ];
@@ -22,43 +23,45 @@
           extensions = [ "rust-src" "rust-analyzer" ];
         };
 
+        craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
+
         buildInputs = with pkgs; [
-          # Wayland and display
           wayland
           libxkbcommon
           libGL
           mesa
-
-          # Font rendering
           fontconfig
           freetype
           expat
-
-          # Additional X11 support (some Cosmic apps need this)
           xorg.libX11
           xorg.libXcursor
           xorg.libXrandr
           xorg.libXi
-
-          # Vulkan (optional but recommended)
           vulkan-loader
-
-          # Audio
           alsa-lib
         ];
 
         nativeBuildInputs = with pkgs; [
           pkg-config
-          rustToolchain
-          cargo
         ];
 
-        # Runtime library path
         libPath = pkgs.lib.makeLibraryPath buildInputs;
 
-      in {
-        devShells.default = pkgs.mkShell {
+        slowly = craneLib.buildPackage {
+          src = craneLib.cleanCargoSource ./.;
+          strictDeps = true;
           inherit buildInputs nativeBuildInputs;
+          postFixup = ''
+            patchelf --set-rpath "${libPath}" $out/bin/slowly
+          '';
+        };
+
+      in {
+        packages.default = slowly;
+
+        devShells.default = pkgs.mkShell {
+          inherit buildInputs;
+          nativeBuildInputs = nativeBuildInputs ++ [ rustToolchain ];
 
           shellHook = ''
             export LD_LIBRARY_PATH="${libPath}:$LD_LIBRARY_PATH"
