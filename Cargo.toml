@@ -8,8 +8,5 @@ license = "Hippocratic-3.0"
 [dependencies]
 libcosmic = { git = "https://github.com/pop-os/libcosmic.git", default-features = false, features = ["tokio", "winit", "wgpu"] }
 tokio = { version = "1", features = ["sync", "time"] }
-rodio = { version = "0.19", default-features = false }
-rand = { version = "0.8", features = ["small_rng"] }
 serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-directories = "5"
+diaframe = { git = "https://github.com/daytimeforninja/diaframe.git" }

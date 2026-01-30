@@ -6,8 +6,8 @@ use cosmic::iced::Length;
 use cosmic::widget::{self, button, container, settings, text};
 use cosmic::{Apply, Application, Element, Task};
 
-use crate::audio::AudioPlayer;
-use crate::config::{BreathingConfig, BreathingPreset, PersistentSettings, SessionDuration};
+use diaframe::{AudioPlayer, SessionDuration};
+use crate::config::{BreathingConfig, BreathingPreset, PersistentSettings};
 use crate::widgets::BreathingCircle;
 
 
@@ -93,10 +93,7 @@ pub struct App {
     session_duration: SessionDuration,
     session_elapsed: f32,
     // Statistics
-    total_practice_seconds: f32,
-    sessions_completed: u32,
-    today_practice_seconds: f32,
-    last_session_date: Option<String>,
+    stats: diaframe::PracticeStats,
 }
 
 /// A floating ambient particle
@@ -136,11 +133,14 @@ impl Application for App {
 
         let audio = AudioPlayer::new();
         if let Some(ref a) = audio {
-            a.set_volume(saved.volume);
-            a.set_brown_enabled(saved.brown_noise);
-            a.set_binaural_enabled(saved.binaural);
-            a.set_tones_enabled(saved.tones);
+            a.set_volume(saved.audio.volume);
+            a.set_brown_enabled(saved.audio.brown_noise);
+            a.set_binaural_enabled(saved.audio.binaural);
+            a.set_tones_enabled(saved.audio.tones);
         }
+
+        let mut stats = saved.stats.clone();
+        stats.check_today();
 
         let app = Self {
             core,
@@ -155,20 +155,17 @@ impl Application for App {
             phase_start: Instant::now(),
             current_view: View::Breathing,
             audio,
-            brown_enabled: saved.brown_noise,
-            binaural_enabled: saved.binaural,
-            tones_enabled: saved.tones,
-            volume: saved.volume,
+            brown_enabled: saved.audio.brown_noise,
+            binaural_enabled: saved.audio.binaural,
+            tones_enabled: saved.audio.tones,
+            volume: saved.audio.volume,
             fullscreen: false,
             transition_flash: 0.0,
             startup_fade: 1.0,
             particles: Self::create_particles(30),
             session_duration: saved.session_duration,
             session_elapsed: 0.0,
-            total_practice_seconds: saved.total_practice_seconds,
-            sessions_completed: saved.sessions_completed,
-            today_practice_seconds: Self::check_today_practice(&saved),
-            last_session_date: saved.last_session_date,
+            stats,
         };
         (app, Task::none())
     }
@@ -241,7 +238,8 @@ impl Application for App {
                             if let Some(ref audio) = self.audio {
                                 audio.pause();
                             }
-                            self.record_session(self.session_elapsed);
+                            self.stats.record_session(self.session_elapsed);
+                            self.save_settings();
                             return Task::none();
                         }
                     }
@@ -253,8 +251,7 @@ impl Application for App {
 
                     // Update audio with current state
                     if let Some(ref audio) = self.audio {
-                        audio.set_phase(self.current_phase == Phase::Inhale);
-                        audio.set_progress(self.phase_progress);
+                        audio.set_state(self.current_phase == Phase::Inhale, self.phase_progress);
                     }
 
                     if self.phase_progress >= 1.0 {
@@ -274,8 +271,7 @@ impl Application for App {
                     self.session_elapsed = 0.0;
                     self.current_phase = Phase::Inhale;
                     if let Some(ref audio) = self.audio {
-                        audio.set_phase(true);
-                        audio.set_progress(0.0);
+                        audio.set_state(true, 0.0);
                         audio.play();
                     }
                 } else {
@@ -283,7 +279,8 @@ impl Application for App {
                         audio.pause();
                     }
                     if self.session_elapsed >= 30.0 {
-                        self.record_session(self.session_elapsed);
+                        self.stats.record_session(self.session_elapsed);
+                        self.save_settings();
                     }
                 }
             }
@@ -597,15 +594,15 @@ impl App {
             .title("Statistics")
             .add(
                 settings::item::builder("Today")
-                    .control(text::body(Self::format_duration(self.today_practice_seconds)))
+                    .control(text::body(diaframe::format_duration(self.stats.today_practice_seconds)))
             )
             .add(
                 settings::item::builder("Total Practice")
-                    .control(text::body(Self::format_duration(self.total_practice_seconds)))
+                    .control(text::body(diaframe::format_duration(self.stats.total_practice_seconds)))
             )
             .add(
                 settings::item::builder("Sessions")
-                    .control(text::body(format!("{}", self.sessions_completed)))
+                    .control(text::body(format!("{}", self.stats.sessions_completed)))
             );
 
         let content = settings::view_column(vec![
@@ -673,58 +670,14 @@ impl App {
             inhale_duration: self.config.inhale_duration,
             exhale_duration: self.config.exhale_duration,
             session_duration: self.session_duration,
-            brown_noise: self.brown_enabled,
-            binaural: self.binaural_enabled,
-            tones: self.tones_enabled,
-            volume: self.volume,
-            total_practice_seconds: self.total_practice_seconds,
-            sessions_completed: self.sessions_completed,
-            last_session_date: self.last_session_date.clone(),
-            today_practice_seconds: self.today_practice_seconds,
+            audio: diaframe::AudioSettings {
+                brown_noise: self.brown_enabled,
+                binaural: self.binaural_enabled,
+                tones: self.tones_enabled,
+                volume: self.volume,
+            },
+            stats: self.stats.clone(),
         };
         settings.save();
-    }
-
-    fn today_string() -> String {
-        let now = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs();
-        let days = now / 86400;
-        format!("{}", days)
-    }
-
-    fn check_today_practice(saved: &PersistentSettings) -> f32 {
-        let today = Self::today_string();
-        if saved.last_session_date.as_ref() == Some(&today) {
-            saved.today_practice_seconds
-        } else {
-            0.0
-        }
-    }
-
-    fn record_session(&mut self, duration_seconds: f32) {
-        let today = Self::today_string();
-
-        if self.last_session_date.as_ref() != Some(&today) {
-            self.today_practice_seconds = 0.0;
-            self.last_session_date = Some(today);
-        }
-
-        self.total_practice_seconds += duration_seconds;
-        self.today_practice_seconds += duration_seconds;
-        self.sessions_completed += 1;
-        self.save_settings();
-    }
-
-    fn format_duration(seconds: f32) -> String {
-        let total_minutes = (seconds / 60.0) as u32;
-        let hours = total_minutes / 60;
-        let minutes = total_minutes % 60;
-        if hours > 0 {
-            format!("{}h {}m", hours, minutes)
-        } else {
-            format!("{}m", minutes)
-        }
     }
 }

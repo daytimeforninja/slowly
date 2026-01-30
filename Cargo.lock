@@ -1357,6 +1357,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "diaframe"
+version = "0.1.0"
+source = "git+https://github.com/daytimeforninja/diaframe.git#8692d7b839629dff4d8fe31d4dc34a2a253c0f75"
+dependencies = [
+ "directories",
+ "rand 0.8.5",
+ "rodio",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "digest"
 version = "0.10.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4692,12 +4704,9 @@ dependencies = [
 name = "slowly"
 version = "0.1.0"
 dependencies = [
- "directories",
+ "diaframe",
  "libcosmic",
- "rand 0.8.5",
- "rodio",
  "serde",
- "serde_json",
  "tokio",
 ]
 

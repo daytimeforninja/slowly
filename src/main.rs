@@ -1,5 +1,4 @@
 mod app;
-mod audio;
 mod config;
 mod widgets;
 
