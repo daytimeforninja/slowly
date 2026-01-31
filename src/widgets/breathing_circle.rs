@@ -15,6 +15,7 @@ pub struct BreathingCircle {
     opacity: f32,
     particles: Vec<Particle>,
     session_progress: Option<f32>,
+    text_opacity: f32,
 }
 
 impl BreathingCircle {
@@ -23,7 +24,7 @@ impl BreathingCircle {
     const MAX_SCALE: f32 = 0.80; // 80% of window at largest
 
     pub fn new(phase: Phase, progress: f32, is_running: bool) -> Self {
-        Self { phase, progress, is_running, flash: 0.0, opacity: 1.0, particles: Vec::new(), session_progress: None }
+        Self { phase, progress, is_running, flash: 0.0, opacity: 1.0, particles: Vec::new(), session_progress: None, text_opacity: 1.0 }
     }
 
     pub fn with_flash(mut self, flash: f32) -> Self {
@@ -43,6 +44,11 @@ impl BreathingCircle {
 
     pub fn with_session_progress(mut self, progress: Option<f32>) -> Self {
         self.session_progress = progress;
+        self
+    }
+
+    pub fn with_text_opacity(mut self, opacity: f32) -> Self {
+        self.text_opacity = opacity;
         self
     }
 
@@ -85,6 +91,7 @@ impl BreathingCircle {
             opacity: self.opacity,
             particles: self.particles,
             session_progress: self.session_progress,
+            text_opacity: self.text_opacity,
         })
         .width(cosmic::iced::Length::Fill)
         .height(cosmic::iced::Length::Fill)
@@ -100,6 +107,7 @@ struct BreathingCircleProgram {
     opacity: f32,
     particles: Vec<Particle>,
     session_progress: Option<f32>,
+    text_opacity: f32,
 }
 
 impl BreathingCircleProgram {
@@ -288,42 +296,45 @@ impl canvas::Program<Message, Theme> for BreathingCircleProgram {
             );
         }
 
-        // Draw phase text with glow effect
-        let text_size = (half_size * 0.12).clamp(24.0, 64.0);
+        // Draw phase text with glow effect (fades out over first 6 breaths)
+        if self.text_opacity > 0.001 {
+            let text_size = (half_size * 0.12).clamp(24.0, 64.0);
+            let ta = self.text_opacity;
 
-        // Draw text glow (multiple layers for soft glow)
-        for i in (1..=3).rev() {
-            let glow_offset = i as f32 * 1.5;
-            let glow_alpha = 0.15 * self.opacity / (i as f32);
-            let glow_color = Color::from_rgba(1.0, 0.85, 0.6, glow_alpha);
+            // Draw text glow (multiple layers for soft glow)
+            for i in (1..=3).rev() {
+                let glow_offset = i as f32 * 1.5;
+                let glow_alpha = 0.15 * self.opacity * ta / (i as f32);
+                let glow_color = Color::from_rgba(1.0, 0.85, 0.6, glow_alpha);
 
-            // Draw glow in multiple directions
-            for &(dx, dy) in &[(0.0, -1.0), (0.0, 1.0), (-1.0, 0.0), (1.0, 0.0)] {
-                let glow_text = Text {
-                    content: self.phase_text.to_string(),
-                    position: Point::new(center.x + dx * glow_offset, center.y + dy * glow_offset),
-                    color: glow_color,
-                    size: cosmic::iced::Pixels(text_size),
-                    horizontal_alignment: cosmic::iced::alignment::Horizontal::Center,
-                    vertical_alignment: cosmic::iced::alignment::Vertical::Center,
-                    ..Text::default()
-                };
-                frame.fill_text(glow_text);
+                // Draw glow in multiple directions
+                for &(dx, dy) in &[(0.0, -1.0), (0.0, 1.0), (-1.0, 0.0), (1.0, 0.0)] {
+                    let glow_text = Text {
+                        content: self.phase_text.to_string(),
+                        position: Point::new(center.x + dx * glow_offset, center.y + dy * glow_offset),
+                        color: glow_color,
+                        size: cosmic::iced::Pixels(text_size),
+                        horizontal_alignment: cosmic::iced::alignment::Horizontal::Center,
+                        vertical_alignment: cosmic::iced::alignment::Vertical::Center,
+                        ..Text::default()
+                    };
+                    frame.fill_text(glow_text);
+                }
             }
-        }
 
-        // Draw main text
-        let text_color = Color::from_rgba(1.0, 0.98, 0.92, self.opacity);
-        let text = Text {
-            content: self.phase_text.to_string(),
-            position: center,
-            color: text_color,
-            size: cosmic::iced::Pixels(text_size),
-            horizontal_alignment: cosmic::iced::alignment::Horizontal::Center,
-            vertical_alignment: cosmic::iced::alignment::Vertical::Center,
-            ..Text::default()
-        };
-        frame.fill_text(text);
+            // Draw main text
+            let text_color = Color::from_rgba(1.0, 0.98, 0.92, self.opacity * ta);
+            let text = Text {
+                content: self.phase_text.to_string(),
+                position: center,
+                color: text_color,
+                size: cosmic::iced::Pixels(text_size),
+                horizontal_alignment: cosmic::iced::alignment::Horizontal::Center,
+                vertical_alignment: cosmic::iced::alignment::Vertical::Center,
+                ..Text::default()
+            };
+            frame.fill_text(text);
+        }
 
         // Draw session progress bar at bottom
         if let Some(progress) = self.session_progress {

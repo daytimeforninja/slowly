@@ -89,6 +89,8 @@ pub struct App {
     startup_fade: f32,
     // Ambient particles
     particles: Vec<Particle>,
+    // Breath count (for fading labels)
+    breath_count: u32,
     // Session timer
     session_duration: SessionDuration,
     session_elapsed: f32,
@@ -163,6 +165,7 @@ impl Application for App {
             transition_flash: 0.0,
             startup_fade: 1.0,
             particles: Self::create_particles(30),
+            breath_count: 0,
             session_duration: saved.session_duration,
             session_elapsed: 0.0,
             stats,
@@ -255,6 +258,9 @@ impl Application for App {
                     }
 
                     if self.phase_progress >= 1.0 {
+                        if self.current_phase == Phase::Exhale {
+                            self.breath_count += 1;
+                        }
                         self.current_phase = self.current_phase.next();
                         self.phase_start = now;
                         self.phase_progress = 0.0;
@@ -270,6 +276,7 @@ impl Application for App {
                     self.startup_fade = 0.0;
                     self.session_elapsed = 0.0;
                     self.current_phase = Phase::Inhale;
+                    self.breath_count = 0;
                     if let Some(ref audio) = self.audio {
                         audio.set_state(true, 0.0);
                         audio.play();
@@ -401,11 +408,23 @@ impl App {
         let session_progress = self.session_duration.seconds()
             .map(|total| (self.session_elapsed / total).min(1.0));
 
+        // Smooth fade over 6 breaths: interpolate within the current breath
+        let text_opacity = if !self.is_running {
+            1.0
+        } else {
+            let fractional = match self.current_phase {
+                Phase::Inhale => self.phase_progress * 0.5,
+                Phase::Exhale => 0.5 + self.phase_progress * 0.5,
+            };
+            (1.0 - (self.breath_count as f32 + fractional) / 6.0).clamp(0.0, 1.0)
+        };
+
         let visualization = BreathingCircle::new(self.current_phase, self.phase_progress, self.is_running)
             .with_flash(self.transition_flash)
             .with_opacity(self.startup_fade)
             .with_particles(self.particles.clone())
             .with_session_progress(session_progress)
+            .with_text_opacity(text_opacity)
             .view();
 
         container(visualization)
