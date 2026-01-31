@@ -115,7 +115,7 @@ impl Application for App {
     type Flags = ();
     type Message = Message;
 
-    const APP_ID: &'static str = "com.example.slowly";
+    const APP_ID: &'static str = "io.github.daytimeforninja.Slowly";
 
     fn core(&self) -> &Core {
         &self.core

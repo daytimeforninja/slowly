@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.daytimeforninja.Slowly</id>
+  <name>Slowly</name>
+  <summary>Coherence breathing trainer for focus and calm</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>Hippocratic-3.0</project_license>
+
+  <description>
+    <p>
+      Slowly guides coherence breathing — a rhythm shown to improve heart rate
+      variability, reduce stress, and deepen focus. Choose from presets or dial
+      in your own timing, then follow the expanding circle.
+    </p>
+    <p>
+      Audio includes brown noise, theta-frequency binaural beats, and a
+      sub-bass breathing drone, all synthesized in real time with no samples
+      or network access required.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">io.github.daytimeforninja.Slowly.desktop</launchable>
+
+  <screenshots>
+    <screenshot type="default">
+      <caption>Breathing circle during a coherence session</caption>
+      <image>https://raw.githubusercontent.com/daytimeforninja/slowly/trunk/data/screenshot.png</image>
+    </screenshot>
+  </screenshots>
+
+  <url type="homepage">https://github.com/daytimeforninja/slowly</url>
+  <url type="bugtracker">https://github.com/daytimeforninja/slowly/issues</url>
+  <url type="vcs-browser">https://github.com/daytimeforninja/slowly</url>
+
+  <content_rating type="oars-1.1"/>
+
+  <releases>
+    <release version="0.1.0" date="2026-01-31">
+      <description>
+        <p>Initial release.</p>
+      </description>
+    </release>
+  </releases>
+
+  <requires>
+    <display_length compare="ge">360</display_length>
+  </requires>
+
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </supports>
+</component>

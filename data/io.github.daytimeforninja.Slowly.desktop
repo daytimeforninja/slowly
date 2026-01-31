@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Slowly
+Comment=Coherence breathing trainer
+Exec=slowly
+Icon=io.github.daytimeforninja.Slowly
+Terminal=false
+Type=Application
+Categories=Utility;Health;
+Keywords=breathing;meditation;coherence;relaxation;

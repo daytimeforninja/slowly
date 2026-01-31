@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="46%" r="52%">
+      <stop offset="0%" stop-color="#2E1018"/>
+      <stop offset="100%" stop-color="#120408"/>
+    </radialGradient>
+    <linearGradient id="heart" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#E8883A"/>
+      <stop offset="100%" stop-color="#B85A20"/>
+    </linearGradient>
+    <linearGradient id="lung" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7A3518"/>
+      <stop offset="100%" stop-color="#5A2010"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="52%" r="35%">
+      <stop offset="0%" stop-color="#F0C060" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#F0C060" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="102" fill="url(#bg)"/>
+
+  <!-- Warm center glow -->
+  <circle cx="256" cy="268" r="180" fill="url(#glow)"/>
+
+  <!-- Left lung -->
+  <path d="M 208 148
+           C 155 168, 96 240, 96 322
+           C 96 378, 126 416, 168 416
+           C 198 416, 218 388, 228 352
+           C 240 312, 238 262, 230 226
+           C 224 196, 218 168, 208 148 Z"
+        fill="url(#lung)" opacity="0.8"/>
+
+  <!-- Left lung inner highlight -->
+  <path d="M 200 180
+           C 165 198, 128 252, 128 316
+           C 128 356, 146 382, 170 388
+           C 185 392, 198 378, 206 354
+           C 216 322, 214 278, 208 248
+           C 204 222, 204 196, 200 180 Z"
+        fill="#8B4520" opacity="0.35"/>
+
+  <!-- Left bronchus -->
+  <path d="M 256 168 C 246 192, 230 212, 210 232"
+        stroke="#9B5528" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.5"/>
+
+  <!-- Right lung -->
+  <path d="M 304 148
+           C 357 168, 416 240, 416 322
+           C 416 378, 386 416, 344 416
+           C 314 416, 294 388, 284 352
+           C 272 312, 274 262, 282 226
+           C 288 196, 294 168, 304 148 Z"
+        fill="url(#lung)" opacity="0.8"/>
+
+  <!-- Right lung inner highlight -->
+  <path d="M 312 180
+           C 347 198, 384 252, 384 316
+           C 384 356, 366 382, 342 388
+           C 327 392, 314 378, 306 354
+           C 296 322, 298 278, 304 248
+           C 308 222, 308 196, 312 180 Z"
+        fill="#8B4520" opacity="0.35"/>
+
+  <!-- Right bronchus -->
+  <path d="M 256 168 C 266 192, 282 212, 302 232"
+        stroke="#9B5528" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.5"/>
+
+  <!-- Trachea -->
+  <line x1="256" y1="118" x2="256" y2="178"
+        stroke="#9B5528" stroke-width="8" stroke-linecap="round" opacity="0.45"/>
+
+  <!-- Heart -->
+  <path d="M 256 378
+           C 256 378, 168 308, 168 242
+           C 168 206, 196 180, 224 180
+           C 242 180, 252 194, 256 208
+           C 260 194, 270 180, 288 180
+           C 316 180, 344 206, 344 242
+           C 344 308, 256 378, 256 378 Z"
+        fill="url(#heart)"/>
+
+  <!-- Heart specular highlight -->
+  <ellipse cx="218" cy="226" rx="24" ry="18"
+           fill="white" opacity="0.1"
+           transform="rotate(-25 218 226)"/>
+
+  <!-- Heart secondary highlight -->
+  <ellipse cx="296" cy="230" rx="16" ry="12"
+           fill="white" opacity="0.06"
+           transform="rotate(20 296 230)"/>
+
+  <!-- Subtle rim on heart -->
+  <path d="M 256 378
+           C 256 378, 168 308, 168 242
+           C 168 206, 196 180, 224 180
+           C 242 180, 252 194, 256 208
+           C 260 194, 270 180, 288 180
+           C 316 180, 344 206, 344 242
+           C 344 308, 256 378, 256 378 Z"
+        fill="none" stroke="#F0A840" stroke-width="1.5" opacity="0.25"/>
+</svg>
