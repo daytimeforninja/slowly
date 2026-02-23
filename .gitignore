@@ -4,3 +4,6 @@
 *~
 .direnv
 result
+.flatpak-builder/
+build-dir/
+target/
